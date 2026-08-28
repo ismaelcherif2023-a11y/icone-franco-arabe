@@ -7,85 +7,124 @@
 <title>Admin — Résultats des votes (privé)</title>
 <style>
   :root{
-    --bg:#0f1115; --card:#171a21; --border:#2a2f3a; --text:#f2f2f2;
-    --muted:#9aa3af; --accent:#d4af37;
+    --bg:#0d1210; --card:#111b17; --border:#22322b; --text:#f2f2f0;
+    --muted:#8ea296; --gold:#d4af37; --teal:#3ea88a; --slate:#8a95a8; --crimson:#b25b5b; --violet:#8a7bc4;
   }
   *{box-sizing:border-box;}
   body{
     margin:0; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-    background:var(--bg); color:var(--text); padding:2rem 1rem;
+    background:var(--bg); color:var(--text); padding:2rem 1rem 4rem;
   }
-  .wrap{max-width:900px;margin:0 auto;}
-  h1{font-size:1.4rem;margin-bottom:.25rem;}
-  .sub{color:var(--muted);font-size:.9rem;margin-bottom:1.5rem;}
-  .warning{
-    background:#3a2a1a;border:1px solid #6b4a1e;color:#f2d9a8;
-    padding:.75rem 1rem;border-radius:8px;font-size:.85rem;margin-bottom:1.5rem;
-  }
-  .toolbar{display:flex;gap:.75rem;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;}
-  button{
-    background:var(--accent);color:#1a1a1a;border:none;border-radius:8px;
-    padding:.6rem 1.1rem;font-weight:600;cursor:pointer;font-size:.9rem;
-  }
-  button:disabled{opacity:.5;cursor:default;}
-  button.secondary{background:transparent;border:1px solid var(--border);color:var(--text);}
-  .total{font-size:.9rem;color:var(--muted);}
-  .total b{color:var(--text);font-size:1.1rem;}
-  .cat{
+  .wrap{max-width:1100px;margin:0 auto;}
+  h1{font-size:1.3rem;margin:0 0 .25rem;text-align:center;letter-spacing:.02em;color:#d9d9d6;}
+  .sub{color:var(--muted);font-size:.85rem;margin-bottom:1.75rem;text-align:center;}
+
+  .stats{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:1.5rem;}
+  .stat{
     background:var(--card);border:1px solid var(--border);border-radius:12px;
-    padding:1rem 1.25rem;margin-bottom:1rem;
+    padding:1rem 2rem;text-align:center;min-width:150px;
   }
-  .cat h2{font-size:1rem;margin:0 0 .75rem;color:var(--accent);}
-  table{width:100%;border-collapse:collapse;font-size:.9rem;}
-  th,td{text-align:left;padding:.4rem .5rem;border-bottom:1px solid var(--border);}
-  th{color:var(--muted);font-weight:500;font-size:.8rem;text-transform:uppercase;letter-spacing:.03em;}
-  td.votes{text-align:right;font-variant-numeric:tabular-nums;font-weight:600;}
-  tr.winner td{color:var(--accent);}
-  .loading{color:var(--muted);font-size:.85rem;}
-  .err{color:#e57373;font-size:.85rem;}
+  .stat .num{font-size:1.9rem;font-weight:700;color:var(--gold);font-variant-numeric:tabular-nums;}
+  .stat .lbl{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-top:.25rem;}
+
+  .toolbar{display:flex;gap:.75rem;align-items:center;justify-content:center;margin-bottom:.5rem;flex-wrap:wrap;}
+  button{
+    background:transparent;color:var(--teal);border:1px solid var(--teal);border-radius:8px;
+    padding:.6rem 1.1rem;font-weight:600;cursor:pointer;font-size:.85rem;
+  }
+  button:hover{background:rgba(62,168,138,0.1);}
+  button:disabled{opacity:.5;cursor:default;}
+  button.refresh{color:var(--gold);border-color:var(--gold);}
+  button.refresh:hover{background:rgba(212,175,55,0.1);}
+
+  .live{display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--muted);justify-content:center;margin-bottom:2rem;}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  .cat{
+    background:var(--card);border:1px solid var(--border);border-radius:14px;
+    padding:1.5rem 1.75rem;margin-bottom:1.25rem;
+    display:flex; gap:2rem; flex-wrap:wrap; align-items:center;
+  }
+  .cat-left{flex:1 1 340px; min-width:280px;}
+  .cat h2{font-size:1.05rem;margin:0 0 .15rem;display:flex;align-items:center;gap:.5rem;}
+  .cat .cat-total{font-size:.78rem;color:var(--muted);margin-bottom:1rem;}
+  .cand-row{margin-bottom:.85rem;}
+  .cand-row:last-child{margin-bottom:0;}
+  .cand-row .name-line{display:flex;justify-content:space-between;font-size:.88rem;margin-bottom:.3rem;}
+  .cand-row .name-line .name{font-weight:600;}
+  .cand-row .name-line .name.winner{color:var(--gold);}
+  .cand-row .val{color:var(--muted);font-variant-numeric:tabular-nums;font-size:.8rem;}
+  .bar-track{height:8px;border-radius:5px;background:#1c2622;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:5px;transition:width .5s ease;}
+
+  .donut-wrap{flex:0 0 auto;position:relative;width:180px;height:180px;}
+  .donut{width:180px;height:180px;border-radius:50%;}
+  .donut-center{
+    position:absolute;inset:24px;background:var(--card);border-radius:50%;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .donut-center .n{font-size:1.5rem;font-weight:700;color:var(--text);font-variant-numeric:tabular-nums;}
+  .donut-center .l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+
+  .loading{color:var(--muted);font-size:.9rem;text-align:center;padding:3rem 0;}
+  .err-note{color:#e0a35a;font-size:.78rem;text-align:center;margin-top:.5rem;}
+
+  @media(max-width:640px){
+    .cat{flex-direction:column;}
+    .donut-wrap{order:-1;}
+  }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <h1>Résultats des votes — Icône du Franco-Arabe</h1>
-  <div class="sub">Page privée, non reliée au site public. Ne pas partager ce lien.</div>
-  <div class="warning">Cette page lit les compteurs en temps réel. Recharge-la à tout moment pour voir les derniers votes.</div>
+  <h1>ICÔNE FRANCO-ARABE — Prix d'Excellence 2026</h1>
+  <div class="sub">Tableau de bord privé — ne pas partager ce lien</div>
 
-  <div class="toolbar">
-    <button id="refreshBtn" onclick="loadAll()">Actualiser</button>
-    <button class="secondary" id="csvBtn" onclick="downloadCSV()" disabled>Télécharger en CSV</button>
-    <span class="total" id="totalLine"></span>
+  <div class="stats">
+    <div class="stat"><div class="num" id="statTotal">—</div><div class="lbl">Votes totaux</div></div>
+    <div class="stat"><div class="num" id="statCats">—</div><div class="lbl">Catégories</div></div>
+    <div class="stat"><div class="num" id="statCands">—</div><div class="lbl">Candidats</div></div>
   </div>
 
+  <div class="toolbar">
+    <button class="refresh" id="refreshBtn" onclick="loadAll()">↻ Actualiser</button>
+    <button id="csvBtn" onclick="downloadCSV()" disabled>↓ Télécharger en CSV (Excel)</button>
+  </div>
+  <div class="live"><span class="dot"></span> Mise à jour automatique en temps réel</div>
+
   <div id="content"><p class="loading">Chargement des résultats…</p></div>
+  <div id="errNote"></div>
 </div>
 
 <script>
 const CATEGORIES = [
-  { name:"Entreprenariat & Business",
+  { name:"Entreprenariat & Business", icon:"💼",
     candidates:["Elhadj Abdoul Gadiry Barry","Aboubacar Koita","Mohamed Sacko"] },
-  { name:"Banque & Finance",
+  { name:"Banque & Finance", icon:"🏦",
     candidates:["Alpha Ousmane Bah","Adama Berete","Abdoul Karim Camara"] },
-  { name:"Diplomatie & Relations Internationales",
+  { name:"Diplomatie & Relations Internationales", icon:"🌍",
     candidates:["S.E.M. Sekou Camara","S.E.M. Thierno Abdoulaye Sow","S.E.M. Sékou Chérifké Camara"] },
-  { name:"Administration, Droit et Magistrature",
+  { name:"Administration, Droit et Magistrature", icon:"⚖️",
     candidates:["Mohamed Ouattara","Maître Ibrahim Diallo","Mamoudou Diakite"] },
-  { name:"Académie, Recherche & Innovation",
+  { name:"Académie, Recherche & Innovation", icon:"📚",
     candidates:["Pr Imourane Kaba","Dr Abdourahamane Fadiga","Dr Oumar Sanoh"] },
-  { name:"Médias, Communication, Chronique & Information",
+  { name:"Médias, Communication, Chronique & Information", icon:"🎙️",
     candidates:["Harouna Mariama Sylla","Abdoul Hamid Bangoura","Oumar Barry"] },
-  { name:"Paix, Société Civile & Leadership",
+  { name:"Paix, Société Civile & Leadership", icon:"🕊️",
     candidates:["Dr Souleymane Niangadou","Aboubacar Koita","Dr Abdoulaye Bah"] },
-  { name:"Leadership Féminin, Paix & Éducation",
+  { name:"Leadership Féminin, Paix & Éducation", icon:"🔑",
     candidates:["Mariama Kesso Sow","Dr Amina Diallo","Kadiatou Dioumande"] }
 ];
+
+const PALETTE = ['#d4af37','#3ea88a','#8a95a8','#b25b5b','#8a7bc4'];
 
 function slugify(s){
   return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
 }
 
 const VOTE_NAMESPACE = 'icone-franco-arabe-ismaelcherif2023-gala2026';
-let lastResults = null; // for CSV export
+let lastResults = null;
 
 async function getCount(key){
   for(let attempt=0; attempt<3; attempt++){
@@ -93,7 +132,7 @@ async function getCount(key){
       const r = await fetch(`https://abacus.jasoncameron.dev/get/${VOTE_NAMESPACE}/${key}`);
       if(r.status === 404) return 0;
       if(r.status === 429){ await new Promise(res=>setTimeout(res, 400*(attempt+1))); continue; }
-      if(!r.ok) return null; // erreur réseau, on ne sait pas
+      if(!r.ok) return null;
       const d = await r.json();
       return d.value || 0;
     }catch(e){ return null; }
@@ -118,13 +157,27 @@ function escapeHtml(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function buildDonut(candVotes, total){
+  if(total <= 0){
+    return `<div class="donut" style="background:#1c2622;"></div>`;
+  }
+  let acc = 0;
+  const stops = candVotes.map((c, i)=>{
+    const start = acc / total * 100;
+    acc += (c.votes || 0);
+    const end = acc / total * 100;
+    const color = PALETTE[i % PALETTE.length];
+    return `${color} ${start}% ${end}%`;
+  }).join(', ');
+  return `<div class="donut" style="background: conic-gradient(${stops});"></div>`;
+}
+
 async function loadAll(){
   const btn = document.getElementById('refreshBtn');
   const csvBtn = document.getElementById('csvBtn');
   btn.disabled = true;
   csvBtn.disabled = true;
-  document.getElementById('content').innerHTML = '<p class="loading">Chargement des résultats…</p>';
-  document.getElementById('totalLine').textContent = '';
+  document.getElementById('errNote').innerHTML = '';
 
   const allKeys = [];
   CATEGORIES.forEach((cat, ci)=>{
@@ -132,7 +185,7 @@ async function loadAll(){
     cat.candidates.forEach((_, di)=> allKeys.push({ci, di, key:`${catSlug}-${di}`}));
   });
 
-  const results = CATEGORIES.map(cat=>({name:cat.name, candidates:cat.candidates.map(name=>({name, votes:null}))}));
+  const results = CATEGORIES.map(cat=>({name:cat.name, icon:cat.icon, candidates:cat.candidates.map(name=>({name, votes:null}))}));
 
   await mapLimited(allKeys, 4, async (item)=>{
     const val = await getCount(item.key);
@@ -143,22 +196,54 @@ async function loadAll(){
 
   let html = '';
   let grandTotal = 0;
+  let candCount = 0;
   let hadError = false;
 
   results.forEach(cat=>{
+    const catTotal = cat.candidates.reduce((s,c)=> s + (c.votes || 0), 0);
     const maxVotes = Math.max(...cat.candidates.map(c=> c.votes || 0));
-    html += `<div class="cat"><h2>${escapeHtml(cat.name)}</h2><table><thead><tr><th>Candidat</th><th style="text-align:right">Votes</th></tr></thead><tbody>`;
-    cat.candidates.forEach(c=>{
-      const isWinner = c.votes !== null && c.votes === maxVotes && maxVotes > 0;
+
+    let rows = '';
+    cat.candidates.forEach((c, i)=>{
+      candCount++;
       if(c.votes === null){ hadError = true; }
       else{ grandTotal += c.votes; }
-      html += `<tr class="${isWinner ? 'winner' : ''}"><td>${escapeHtml(c.name)}</td><td class="votes">${c.votes === null ? '<span class="err">?</span>' : c.votes}</td></tr>`;
+      const pct = catTotal > 0 && c.votes !== null ? Math.round((c.votes/catTotal)*100) : 0;
+      const isWinner = c.votes !== null && c.votes === maxVotes && maxVotes > 0;
+      const color = PALETTE[i % PALETTE.length];
+      rows += `
+        <div class="cand-row">
+          <div class="name-line">
+            <span class="name ${isWinner?'winner':''}">${isWinner?'★ ':''}${escapeHtml(c.name)}</span>
+            <span class="val">${c.votes === null ? '?' : c.votes} · ${pct}%</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill" style="width:${pct}%; background:${color};"></div></div>
+        </div>`;
     });
-    html += `</tbody></table></div>`;
+
+    const donut = buildDonut(cat.candidates, catTotal);
+
+    html += `<div class="cat">
+      <div class="cat-left">
+        <h2>${cat.icon} ${escapeHtml(cat.name)}</h2>
+        <div class="cat-total">${catTotal} vote${catTotal!==1?'s':''} au total</div>
+        ${rows}
+      </div>
+      <div class="donut-wrap">
+        ${donut}
+        <div class="donut-center"><div class="n">${catTotal}</div><div class="l">votes</div></div>
+      </div>
+    </div>`;
   });
 
   document.getElementById('content').innerHTML = html;
-  document.getElementById('totalLine').innerHTML = `Total des votes : <b>${grandTotal}</b>` + (hadError ? ' <span class="err">(certains chiffres n\'ont pas pu être chargés, réessaie)</span>' : '');
+  document.getElementById('statTotal').textContent = grandTotal;
+  document.getElementById('statCats').textContent = CATEGORIES.length;
+  document.getElementById('statCands').textContent = candCount;
+
+  if(hadError){
+    document.getElementById('errNote').innerHTML = '<p class="err-note">Certains chiffres n\'ont pas pu être chargés — clique sur Actualiser pour réessayer.</p>';
+  }
 
   btn.disabled = false;
   csvBtn.disabled = false;
@@ -187,6 +272,8 @@ function downloadCSV(){
 }
 
 loadAll();
+// Actualisation automatique toutes les 30 secondes pour un suivi en temps réel.
+setInterval(loadAll, 30000);
 </script>
 </body>
 </html>
